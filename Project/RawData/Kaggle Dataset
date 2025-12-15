@@ -1,2 +1,19 @@
+### Dataset: E-commerce Events History — Electronics Store  
+This dataset comes from Kaggle and contains detailed **event-level user behavior** from an electronics e-commerce platform. Each row represents a user action such as product views, cart additions, removals, and purchases, captured over approximately **five months**.
 
-https://www.kaggle.com/code/malyshevartem/e-commerce-funnel-analysis/input
+- **Time period:** October 2019 — February 2020  
+- **Format:** Monthly CSV files of website events  
+- **Total size:** ~2.4 GB (raw CSVs) , 5 different files 
+- **Estimated rows:** ~25–40 million event records  
+- **Typical fields:**  
+  - event_time (timestamp)  
+  - event_type (view, cart, purchase, remove_from_cart)  
+  - product_id  
+  - category_id  
+  - price  
+  - user_id  
+  - user_session
+
+This dataset was used for funnel analysis by combining events, transforming into Parquet, and deriving insights across user sessions and conversions.
+
+link to the dataset https://www.kaggle.com/code/malyshevartem/e-commerce-funnel-analysis/input
