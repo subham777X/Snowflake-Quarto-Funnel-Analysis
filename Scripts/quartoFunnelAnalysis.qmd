@@ -1,0 +1,281 @@
+---
+title: "FUNNEL ANALYSIS | ELECTRONIC STORE"
+
+format:
+  html:
+    page-layout: full
+    embed-resources: true
+    grid:
+      body-width: 1200px
+
+execute:
+  echo: false
+  warning: false
+  error: false
+---
+
+
+```{python}
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+import plotly.io as pio
+pio.renderers.default = "iframe"
+
+df = pd.read_csv(r"C:\Users\subha\Downloads\UserLvl.csv")
+
+df.columns = df.columns.str.lower()
+
+df["secs_firstview_to_firstpurchase"] = pd.to_numeric(df["secs_firstview_to_firstpurchase"], errors = "coerce")
+
+df['secs_firstcart_to_firstpurchase'] = pd.to_numeric(df['secs_firstcart_to_firstpurchase'], errors = 'coerce')
+
+df['lifetime_revenue'] = pd.to_numeric(df['lifetime_revenue'],errors='coerce')
+
+# for all the date and time
+
+ts_cols = ['first_event_time','last_event_time','first_view_time','first_cart_time','first_purchase_time','latest_order_date']
+
+for i in ts_cols:
+  if i in df.columns:
+    df[i]=pd.to_datetime(df[i],errors='coerce')
+
+df['view_to_purchase_hours'] = df['secs_firstview_to_firstpurchase'] / 3600
+df['cart_to_purchase_hours'] = df['secs_firstcart_to_firstpurchase'] / 3600
+total_users = df['user_id'].count()
+
+converted_users = df['is_converted'].astype(str).str.strip().str.lower().eq('yes').sum()
+
+conversion_percentage = converted_users / total_users
+
+avg_rev_per_conv_user = df.loc[(df['is_converted'].str.lower()=='yes')&(df['lifetime_revenue'] > 0),'lifetime_revenue'].astype(float).mean()
+
+avg_time_per_conversion = df.loc[df['is_converted'].str.lower()=='yes','secs_firstview_to_firstpurchase'].astype(float).mean() / 3600
+
+conv_pct_display = round(conversion_percentage* 100 , 2)
+avg_rev_display = round(avg_rev_per_conv_user,2)
+avg_time_display = round(avg_time_per_conversion,2)
+
+```
+
+
+```{python}
+import plotly.graph_objects as go
+fig = go.Figure()
+
+kpis = [
+    ("Total Users", total_users, ",", "", ""),
+    ("Converted", converted_users, ",", "", ""),
+    ("Conversion", conv_pct_display, ".2f", "", "%"),
+    ("Avg Revenue", avg_rev_display, ",.2f", "$", ""),
+    ("Avg Time", avg_time_display, ".1f", "", " hrs"),
+]
+
+n = len(kpis)
+padding = 0.01  
+
+for i, (title, value, fmt, prefix, suffix) in enumerate(kpis):
+    x_start = i/n + padding
+    x_end = (i+1)/n - padding
+    
+    fig.add_trace(go.Indicator(
+        mode="number",
+        value=value,
+        title={"text": title, "font": {"size": 14}},
+        number={
+            "valueformat": fmt,
+            "prefix": prefix,
+            "suffix": suffix,
+            "font": {"size": 34}
+        },
+        domain={"x": [x_start, x_end], "y": [0, 1]}
+    ))
+
+fig.update_layout(
+    height=200,
+    margin=dict(l=20, r=20, t=40, b=20),
+    template="plotly_white"
+)
+```
+
+```{python}
+users_viewed = df['first_view_time'].count()
+users_addedtocart = df['first_cart_time'].count()
+
+stages= ['Total Users','Users Viewed Item', 'Users Added To Cart','Users Purchased']
+values=[total_users,users_viewed,users_addedtocart,converted_users]
+
+fig_funnel = go.Figure(go.Funnel(
+  y=stages,
+  x=values,
+  textposition = 'inside',
+  textinfo = 'value+percent initial',
+  opacity = 0.65,
+  marker = {
+    'color':["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"],
+    "line": {"width": 2, "color": "white"}
+  },
+  connector ={'line':{'color':'royalblue','width':3}}
+))
+
+fig_funnel.update_layout(
+  title ='User Conversion Funnel',
+  title_font_size=20,
+  height = 300,
+  margin = dict(l=150,r=50,t=80,b=50),
+  template = 'plotly_white'
+)
+```
+
+```{python}
+from plotly.subplots import make_subplots
+
+df["view_to_purchase_hrs"] = pd.to_numeric(df.get("secs_firstview_to_firstpurchase"), errors="coerce") / 3600
+df["cart_to_purchase_hrs"] = pd.to_numeric(df.get("secs_firstcart_to_firstpurchase"), errors="coerce") / 3600
+
+fig_subplots = make_subplots(
+    rows=1, cols=2,
+    subplot_titles=(
+        'View → Purchase Time Distribution',
+        'Cart → Purchase Time Distribution'
+    ),
+    horizontal_spacing=0.10
+)
+
+view_data = df['view_to_purchase_hrs'].dropna()
+cart_data = df['cart_to_purchase_hrs'].dropna()
+
+fig_subplots.add_trace(
+    go.Histogram(
+        x=view_data,
+        nbinsx=100,
+        name='View → Purchase',
+        marker_color="#4C78A8",
+        hovertemplate='Hours: %{x:.1f}<br>Count: %{y:,}<extra></extra>'
+    ), 
+    row=1, col=1
+)
+
+fig_subplots.add_trace(
+    go.Histogram(
+        x=cart_data,
+        nbinsx=100,
+        name='Cart → Purchase',
+        marker_color="#F58518",
+        hovertemplate='Hours: %{x:.1f}<br>Count: %{y:,}<extra></extra>'
+    ),
+    row=1, col=2
+)
+
+view_max = view_data.max()
+cart_max = cart_data.max()
+
+def get_tick_interval(max_val):
+    if max_val <= 100:
+        return 12
+    elif max_val <= 500:
+        return 24
+    elif max_val <= 1000:
+        return 48
+    else:
+        return 168
+
+view_tick = get_tick_interval(view_max)
+cart_tick = get_tick_interval(cart_max)
+
+fig_subplots.update_xaxes(
+    title_text='Hours',
+    row=1, col=1,
+    dtick=view_tick,
+    tickmode='linear',
+    showgrid=True,
+    gridcolor='lightgray'
+)
+
+fig_subplots.update_xaxes(
+    title_text='Hours',
+    row=1, col=2,
+    dtick=cart_tick,
+    tickmode='linear',
+    showgrid=True,
+    gridcolor='lightgray'
+)
+
+fig_subplots.update_yaxes(
+    title_text='Count',
+    row=1, col=1,
+    showgrid=True,
+    gridcolor='lightgray'
+)
+
+fig_subplots.update_yaxes(
+    title_text='Count',
+    row=1, col=2,
+    showgrid=True,
+    gridcolor='lightgray'
+)
+
+fig_subplots.update_layout(
+    height=500,
+    showlegend=False,
+    title={
+        'text': 'Conversion Time Analysis',
+        'x': 0.5,
+        'xanchor': 'center',
+        'font': {'size': 22}
+    },
+    template='plotly_white',
+    margin=dict(l=70, r=70, t=100, b=80)
+)
+```
+
+```{python}
+import plotly.express as px
+
+df['last_event_time'] = pd.to_datetime(df['last_event_time'],errors = 'coerce')
+today = df['last_event_time'].max()
+df['days_since_last_active'] = (today - df['last_event_time']).dt.days
+
+bins = [-1,7,30,90,180]
+labels = ['Active (0-7)','Warm (8-30)','At Risk (31-90)','Dormant (91-180)']
+
+df['dormancy_segment'] = pd.cut(
+  df['days_since_last_active'],
+  bins=bins,
+  labels = labels
+)
+
+dormancy_counts = (
+  df.groupby('dormancy_segment')['user_id']
+  .nunique()
+  .reset_index(name='users')
+)
+
+dormancy_counts['dormancy_segment'] = pd.Categorical(
+  dormancy_counts['dormancy_segment'],
+  categories = labels,
+  ordered = True
+)
+
+dormancy_counts = dormancy_counts.sort_values('dormancy_segment')
+
+fig_dormancy = px.bar(
+  dormancy_counts,
+  x='dormancy_segment',
+  y='users',
+  color='dormancy_segment',
+  color_discrete_sequence=["#2ca02c", "#8bc34a", "#ffc107", "#ff9800"],
+  text = dormancy_counts['users'].map(lambda x: f'{x:,}'),
+  title= 'Dormancy Segmentation Of Users'
+)
+
+fig_dormancy.update_traces(textposition='outside')
+fig_dormancy.update_layout(
+  xaxis_title ='Dormancy Segment',
+  yaxis_title = 'Number Of Users',
+  showlegend = False,
+  height = 380,
+  margin= dict(l=40, r=40, t=60, b=40),
+  template = 'plotly_white'
+)
+```
