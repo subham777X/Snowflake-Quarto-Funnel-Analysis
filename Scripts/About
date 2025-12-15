@@ -1,0 +1,20 @@
+### 📁 Project Scripts & Utilities
+
+This folder contains the core scripts used for data processing, transformation, and visualization in this project.
+
+#### Included scripts:
+- **Snowflake SQL scripts**  
+  Used for data ingestion, cleansing, deduplication, transformation, and creation of analytical tables.
+
+- **Quarto visualization scripts**  
+  Used to build interactive HTML-based dashboards for funnel and behavioral analysis.
+
+- **CSV → Parquet conversion (Python)**  
+  Python scripts to convert raw CSV files into Parquet format to significantly reduce storage size and improve processing efficiency.
+
+- **Snowflake data extraction & cleanup (Python)**  
+  Scripts used to extract cleaned data downloaded from Snowflake (in `.gz` format) and replace Snowflake-specific null representations (`\N`) with proper `NULL` values.
+
+- **Timezone normalization (Python)**  
+  Utility scripts to convert timestamp fields from string format into proper datetime objects and normalize timezones for consistent analysis.
+
