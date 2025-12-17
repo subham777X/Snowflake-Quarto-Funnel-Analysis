@@ -19,26 +19,26 @@ The project mirrors real-world **data engineering and analytics workflows**, usi
 
 ## Project Workflow
 
-### 1️⃣ Data Optimization (Python)
+###  Data Optimization (Python)
 - Converted raw CSV files to **Parquet** format.
 - Reduced storage size by ~**85%**.
 - Improved ingestion and query performance in Snowflake.
 
 ---
 
-### 2️⃣ Data Ingestion & ETL (Snowflake)
+###  Data Ingestion & ETL (Snowflake)
 An end-to-end ETL pipeline was built using layered data modeling:
 
-#### 🔹 Staging Layer
+####  Staging Layer
 - Loaded Parquet files using Snowflake stages.
 - Standardized schemas and timestamps.
 
-#### 🔹 Transformation Layer
+####  Transformation Layer
 - Deduplicated events using window functions.
 - Cleaned and standardized price and timestamp fields.
 - Created behavioral flags (viewed, carted, purchased).
 
-#### 🔹 Analytics Layer
+####  Analytics Layer
 Final enriched tables were created at multiple **levels of detail**:
 - Product-level  
 - Session-level  
@@ -48,7 +48,7 @@ These tables support funnel, conversion, churn, and retention analyses.
 
 ---
 
-### 3️⃣ Data Cleanup & Normalization (Python)
+###  Data Cleanup & Normalization (Python)
 - Extracted cleaned data from Snowflake (`.gz` format).
 - Replaced Snowflake-specific null markers (`\N`) with proper NULLs.
 - Converted timestamps from string format to datetime.
@@ -56,7 +56,7 @@ These tables support funnel, conversion, churn, and retention analyses.
 
 ---
 
-### 4️⃣ Funnel Analysis
+###  Funnel Analysis
 Primary funnel analyzed:
 
 **Users → Product Views → Cart Additions → Purchases**
@@ -68,7 +68,7 @@ Key findings:
 
 ---
 
-### 5️⃣ Visualization (Quarto)
+###  Visualization (Quarto)
 - Built interactive dashboards using **Quarto + Plotly**.
 - Exported as **HTML** for easy sharing.
 - Chosen over Tableau Public due to large data volume.
